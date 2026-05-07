@@ -8,6 +8,8 @@ SciPy
 Matplotlib
 Pandas
 Seaborn
+
+
 files: thermo1.yaml, thermo2.yaml, and gibbs_rate.py
 
 

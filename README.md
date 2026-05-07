@@ -2,7 +2,7 @@
 
 Requirement:  
 Cantera 3.1.0  
-compiled using conda create --name ct-env --channel conda-forge cantera ipython matplotlib jupyter
+compiled using conda create --name ct-env --channel conda-forge cantera ipython matplotlib jupyter  
 Tested only for 3.1.0, currently incompatible with 3.2.0 (released November 2025)
   
 Dependencies:   

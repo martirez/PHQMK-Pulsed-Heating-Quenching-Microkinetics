@@ -1,15 +1,20 @@
 # PHQ-MK-Pulsed-Heating-Quenching-Microkinetics
 
+Requirement:
+Cantera 3.1.0    
+  
 Dependencies:   
 Anaconda 2023.09  
-Cantera 3.1.0  
 NumPy  
 SciPy  
 Matplotlib  
 Pandas  
 Seaborn  
   
-files: thermo1.yaml, thermo2.yaml, and gibbs_rate.py  
+Input files: 
+thermo1.yaml (catalytic cycle A energetics)  
+thermo2.yaml (catalytic cycle B energetics)  
+gibbs_rate.py (external reaction type subroutine: surface-cubic-Ea)      
   
 To use:  
 replace Tmin base_values (T_c_arr) and Tmax base_values (T_h_arr) in K   

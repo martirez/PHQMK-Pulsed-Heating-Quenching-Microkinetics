@@ -22,7 +22,7 @@ Edit specifications:
 replace Tmin base_values (T_c_arr) and Tmax base_values (T_h_arr) in K for PHQ  
 replace T (T_list) in K for isothermal    
 replace pulse cycle length (cyc) in s  
-replace averaging window: lower bond (window_1) and upper bound (window_2)  
+replace averaging window: lower bound (window_1) and upper bound (window_2)  
   
 Execute:  
 conda activate ct-env  

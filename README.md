@@ -34,6 +34,6 @@ python Fe-NH3_phq.py
 #for pulsed heating and quenching mode scaled-rates  
 python Fe-NH3_phq_scaled.py   
   
-Reference (please cite):  
-Sophia Kurdziel, Zijian Sun, Ziqiao Chang, Fangyuan Liu, Liangbing Hu, Yiguang Ju, Emily A. Carter,and John Mark P. Martirez, "First-Principles Microkinetic Model for Ammonia Synthesis on Fe(110) under Non-Equilibrium Pulsed Heating and Quenching Operation", XXX, 2026  
+Please cite this repository and  
+(1) Sophia Kurdziel, Zijian Sun, Ziqiao Chang, Fangyuan Liu, Liangbing Hu, Yiguang Ju, Emily A. Carter,and John Mark P. Martirez, "First-Principles Microkinetic Model for Ammonia Synthesis on Fe(110) under Non-Equilibrium Pulsed Heating and Quenching Operation", XXX, 2026  
  

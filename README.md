@@ -32,7 +32,7 @@ python Fe-NH3_phq_scaled.py
 replace Tmin base_values (T_c_arr) and Tmax base_values (T_h_arr) in K for PHQ  
 replace Ts (T_list) in K for isothermal    
 replace pulse cycle length (cyc) in s  
-replace averaging window: lower bound (window_1) and upper bound (window_2) 
+replace averaging window: lower bound (window_1) and upper bound (window_2)   
 replace simulation length (t_total) in s  
   
 **Please cite this repository and the following publications:**  

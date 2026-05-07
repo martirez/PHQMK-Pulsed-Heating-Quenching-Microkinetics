@@ -11,7 +11,7 @@ Matplotlib
 Pandas  
 Seaborn  
   
-Input files: 
+Input files:   
 thermo1.yaml (catalytic cycle A energetics)  
 thermo2.yaml (catalytic cycle B energetics)  
 gibbs_rate.py (external reaction type subroutine: surface-cubic-Ea)      

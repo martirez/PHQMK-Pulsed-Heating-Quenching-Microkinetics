@@ -1,4 +1,4 @@
-# PHQ-MK-Pulsed-Heating-Quenching-Microkinetics
+# PHQMK-Pulsed-Heating-Quenching-Microkinetics
 
 Requirement:  
 Cantera 3.1.0  

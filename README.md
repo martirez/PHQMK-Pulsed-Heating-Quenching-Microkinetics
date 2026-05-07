@@ -22,4 +22,5 @@ python Fe-NH3_iso.py
 or  
 #for pulsed heating and quenching mode  
 python Fe-NH3_phq.py  
-
+#for pulsed heating and quenching mode scaled-rates  
+python Fe-NH3_phq_scaled.py   

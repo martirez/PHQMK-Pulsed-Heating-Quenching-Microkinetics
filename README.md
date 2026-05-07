@@ -12,7 +12,8 @@ Seaborn
 files: thermo1.yaml, thermo2.yaml, and gibbs_rate.py  
   
 To use:  
-replace Tmin (T_c_arr) and Tmax (T_h_arr) 
+replace Tmin base_values (T_c_arr) and Tmax base_values (T_h_arr) in K   
+replace pulse cycle length (s): cyc  
   
 Execute:  
 conda activate ct-env  

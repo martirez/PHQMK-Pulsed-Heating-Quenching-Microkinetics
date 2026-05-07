@@ -1,7 +1,8 @@
 # PHQ-MK-Pulsed-Heating-Quenching-Microkinetics
 
-Requirement:
-Cantera 3.1.0    
+Requirement:  
+Cantera 3.1.0  
+(compiled using conda create --name ct-env --channel conda-forge cantera ipython matplotlib jupyter)  
   
 Dependencies:   
 Anaconda 2023.09  
@@ -16,9 +17,11 @@ thermo1.yaml (catalytic cycle A energetics)
 thermo2.yaml (catalytic cycle B energetics)  
 gibbs_rate.py (external reaction type subroutine: surface-cubic-Ea)      
   
-To use:  
-replace Tmin base_values (T_c_arr) and Tmax base_values (T_h_arr) in K   
-replace pulse cycle length (s): cyc  
+Edit specifications:  
+replace Tmin base_values (T_c_arr) and Tmax base_values (T_h_arr) in K for PHQ
+replace T (T_list) in K for isothermal    
+replace pulse cycle length (cyc) in s  
+replace averaging window: lower bond (window_1) and upper bound (window_2)  
   
 Execute:  
 conda activate ct-env  

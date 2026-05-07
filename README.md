@@ -19,7 +19,7 @@ thermo2.yaml (catalytic cycle B energetics)
 gibbs_rate.py (external reaction type subroutine: surface-cubic-Ea)      
   
 Edit specifications:  
-replace Tmin base_values (T_c_arr) and Tmax base_values (T_h_arr) in K for PHQ
+replace Tmin base_values (T_c_arr) and Tmax base_values (T_h_arr) in K for PHQ  
 replace T (T_list) in K for isothermal    
 replace pulse cycle length (cyc) in s  
 replace averaging window: lower bond (window_1) and upper bound (window_2)  

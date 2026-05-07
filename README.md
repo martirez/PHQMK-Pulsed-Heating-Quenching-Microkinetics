@@ -35,7 +35,7 @@ python Fe-NH3_phq.py
 python Fe-NH3_phq_scaled.py   
   
 Please cite this repository and the following publications:   
-(1) Sophia Kurdziel, Zijian Sun, Ziqiao Chang, Fangyuan Liu, Liangbing Hu, Yiguang Ju, Emily A. Carter,and John Mark P. Martirez, "First-Principles Microkinetic Model for Ammonia Synthesis on Fe(110) under Non-Equilibrium Pulsed Heating and Quenching Operation", XXX, (2026)
-(2) J. M. P. Martirez, S. Kurdziel, and E. A. Carter, "First-Principles Insights into the Thermocatalytic Cracking of Ammonia-Hydrogen Blends on Fe(110). 2. Kinetics," Journal of Physical Chemistry C, 129, 6697-6718 (2025)
-(3) J. M. P. Martirez and E. A. Carter, First-Principles Insights into the Thermocatalytic Cracking of Ammonia-Hydrogen Blends on Fe(110). 1. Thermodynamics, Journal of Physical Chemistry C, 126, 19733 (2022)  
+(1) Sophia Kurdziel, Zijian Sun, Ziqiao Chang, Fangyuan Liu, Liangbing Hu, Yiguang Ju, Emily A. Carter,and John Mark P. Martirez, "First-Principles Microkinetic Model for Ammonia Synthesis on Fe(110) under Non-Equilibrium Pulsed Heating and Quenching Operation", XXX, (2026)  
+(2) J. M. P. Martirez, S. Kurdziel, and E. A. Carter, "First-Principles Insights into the Thermocatalytic Cracking of Ammonia-Hydrogen Blends on Fe(110). 2. Kinetics," Journal of Physical Chemistry C, 129, 6697-6718 (2025)  
+(3) J. M. P. Martirez and E. A. Carter, First-Principles Insights into the Thermocatalytic Cracking of Ammonia-Hydrogen Blends on Fe(110). 1. Thermodynamics, Journal of Physical Chemistry C, 126, 19733 (2022)    
  

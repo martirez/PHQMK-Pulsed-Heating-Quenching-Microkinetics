@@ -16,10 +16,13 @@ files: thermo1.yaml, thermo2.yaml, and gibbs_rate.py
 To use:
 conda activate ct-env
 
+
 #for isothermal stead state
 python Fe-NH3_iso.py
 
+
 or
+
 
 #for pulsed heating and quenching mode
 python Fe-NH3_phq.py

@@ -1,0 +1,14 @@
+#! /bin/bash 
+#SBATCH --nodes=1 
+#SBATCH --ntasks-per-node=32 
+#SBATCH --mem-per-cpu=4000 
+#SBATCH -t 06:00:00 
+
+cd $SLURM_SUBMIT_DIR
+
+module purge
+#load anaconda module, e.g. 
+module load anaconda3/2023.9
+conda activate ct-env
+
+python Fe-NH3_iso.py

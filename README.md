@@ -24,7 +24,7 @@ conda activate ct-env
 python Fe-NH3_iso.py    
 #for pulsed heating and quenching mode  
 python Fe-NH3_phq.py  
-#for pulsed heating and quenching mode scaled-rates  
+#for pulsed heating and quenching mode scaled rates  
 python Fe-NH3_phq_scaled.py   
 
 **Edit specifications in Fe-NH3_\<type\>.py:**  
@@ -32,7 +32,8 @@ replace Tmin (base_values, T_c_arr) and Tmax (base_values, T_h_arr) in K for PHQ
 replace temperature(s) (T_list) in K for isothermal      
 replace pulse cycle length (cyc) in s for PHQ   
 replace averaging window: lower bound (window_1) and upper bound (window_2) for all types     
-replace simulation length (t_total) in s for all types    
+replace simulation length (t_total) in s for all types 
+replace cycle length to constrain Tmin (durations) in s for PHQ scaled rates
   
 **Please cite this repository and the following publications:**  
 **(1)** S. Kurdziel and J. M. P. Martirez, "PHQMK-Pulsed-Heating-Quenching-Microkinetics", (2026) https://github.com/martirez/PHQMK-Pulsed-Heating-Quenching-Microkinetics  

@@ -463,8 +463,6 @@ def single_task(para):
 
 if __name__ == '__main__':
     para_h_ori = 3105
-    #para_rc_ori = np.array([5.04e-9, 7169.8])
-    #para_cc_ori = np.array([-1.912, 1659.44])
     para_rc_ori = lambda Tc: np.array([5.039e-9, 5274.4+(1.912*Tc/1.0657)])
     para_cc_ori = lambda Tc: np.array([-1.912, 1.912*Tc/1.0657])
 

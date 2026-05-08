@@ -21,19 +21,18 @@ gibbs_rate.py (external reaction type subroutine: surface-cubic-Ea)
 **Execute:**  
 conda activate ct-env  
 #for isothermal stead state  
-python Fe-NH3_iso.py  
-or  
+python Fe-NH3_iso.py    
 #for pulsed heating and quenching mode  
 python Fe-NH3_phq.py  
 #for pulsed heating and quenching mode scaled-rates  
 python Fe-NH3_phq_scaled.py   
 
-**Edit specifications:**  
-replace Tmin base_values (T_c_arr) and Tmax base_values (T_h_arr) in K for PHQ  
-replace Ts (T_list) in K for isothermal    
-replace pulse cycle length (cyc) in s  
-replace averaging window: lower bound (window_1) and upper bound (window_2)   
-replace simulation length (t_total) in s  
+**Edit specifications in Fe-NH3_<type>.py:**  
+replace Tmin (base_values, T_c_arr) and Tmax (base_values, T_h_arr) in K for PHQ    
+replace temperature(s) (T_list) in K for isothermal      
+replace pulse cycle length (cyc) in s for PHQ   
+replace averaging window: lower bound (window_1) and upper bound (window_2) for all types     
+replace simulation length (t_total) in s for all types    
   
 **Please cite this repository and the following publications:**  
 (1) Sophia Kurdziel, Zijian Sun, Ziqiao Chang, Fangyuan Liu, Liangbing Hu, Yiguang Ju, Emily A. Carter,and John Mark P. Martirez, "First-Principles Microkinetic Model for Ammonia Synthesis on Fe(110) under Non-Equilibrium Pulsed Heating and Quenching Operation", XXX, (2026)  

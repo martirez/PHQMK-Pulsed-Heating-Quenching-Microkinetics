@@ -27,7 +27,7 @@ python Fe-NH3_phq.py
 #for pulsed heating and quenching mode scaled rates  
 python Fe-NH3_phq_scaled.py   
 
-**Specifications in Fe-NH3_\<type\>.py that should edited as needed:**    
+**Specifications in Fe-NH3_\<type\>.py that should be edited as needed:**    
 replace Tmin (base_values, T_c_arr) and Tmax (base_values, T_h_arr) in K for PHQ    
 replace temperature(s) (T_list) in K for isothermal      
 replace pulse cycle length (cyc) in s for PHQ   

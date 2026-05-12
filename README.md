@@ -37,7 +37,7 @@ replace cycle length to constrain Tmin (durations) in s for PHQ scaled rates
   
 **Please cite this repository and the following publications:**  
 **(1)** S. Kurdziel and J. M. P. Martirez, "PHQMK-Pulsed-Heating-Quenching-Microkinetics", (2026) https://github.com/martirez/PHQMK-Pulsed-Heating-Quenching-Microkinetics  
-**(2)** S. Kurdziel, Z. Sun, Z. Chang, F. Liu, L. Hu, Y. Ju, E. A. Carter, and J. M. P. Martirez, "First-Principles Microkinetic Model for Ammonia Synthesis on Fe(110) under Non-Equilibrium Pulsed Heating and Quenching Operation", XXX, (2026)  
+**(2)** S. Kurdziel, Z. Sun, Z. Chang, F. Liu, L. Hu, Y. Ju, E. A. Carter, and J. M. P. Martirez, "First-Principles Microkinetic Model for Ammonia Synthesis on Fe(110) under Non-Equilibrium Programmable Heating and Quenching Operation", XXX, (2026)  
 **(3)** J. M. P. Martirez, S. Kurdziel, and E. A. Carter, "First-Principles Insights into the Thermocatalytic Cracking of Ammonia-Hydrogen Blends on Fe(110). 2. Kinetics," Journal of Physical Chemistry C, 129, 6697-6718 (2025)  
 **(4)** J. M. P. Martirez and E. A. Carter, First-Principles Insights into the Thermocatalytic Cracking of Ammonia-Hydrogen Blends on Fe(110). 1. Thermodynamics, Journal of Physical Chemistry C, 126, 19733 (2022)    
  

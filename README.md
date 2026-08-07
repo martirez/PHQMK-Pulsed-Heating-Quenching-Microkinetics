@@ -25,7 +25,7 @@ python Fe-NH3_iso.py
 #for pulsed heating and quenching mode  
 python Fe-NH3_phq.py  
 #for pulsed heating and quenching mode with scaled rates  
-python Fe-NH3_phq_scaled.py 
+python Fe-NH3_phq_scaled.py   
 #for sensitivity analysis of isothermal steady state   
 python Fe-NH3_iso_sens.py    
 #for sensitivity analysis of pulsed heating and quenching mode  

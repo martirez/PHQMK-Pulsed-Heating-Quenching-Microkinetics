@@ -211,30 +211,6 @@ species:
     density: 7.874 g/cm^3
 
 reactions:
-################removed##################
-#- equation: H2(S1) + FE(B) <=> H2 + FE(S1)
-#  sticking-coefficient: {A: 0.5, b: 0.0, Ea: 0.0 kcal/mol}
-#  sticking-species: H2
-#
-#- equation: N2(S2) + FE(B) <=> N2 + FE(S1)
-#  sticking-coefficient: {A: 0.5, b: 0.0, Ea: 0.0 kcal/mol}
-#  sticking-species: N2
-#
-#- equation: NH3 + FE(S1) <=> NH3(S1) + FE(B)
-#  sticking-coefficient: {A: 0.5, b: 0.0, Ea: 0.0 kcal/mol}
-#  sticking-species: NH3
-#
-#- equation: NH3(S1) + FE(S1) <=> H(S4) + NH2(S1) + FE(B)
-#  type: surface-cubic-Ea
-#  A: 7.11147E+18
-#  b: 1.0
-#  Ea0: 153899.9264
-#  Ea1: 143.4424
-#  Ea2: -0.0067
-#  Ea3: 0.0000
-##########################################
-
-###################added###################
 - equation: NH3 + FE(S1) + FE(S3) <=> H(S4) + NH2(S1) + 2 FE(B)
   type: surface-cubic-Ea
   gas-order: 1
@@ -243,7 +219,7 @@ reactions:
   Ea1: 143.4424
   Ea2: -0.0067
   Ea3: 0.0000
-###########################################
+
 - equation: NH2(S1) + FE(S3) <=> H(S1) + NH(S1) + FE(B)
   type: surface-cubic-Ea
   gas-order: 0
@@ -252,6 +228,7 @@ reactions:
   Ea1: 19.6788
   Ea2: 0.0013
   Ea3: -0.0000
+  
 - equation: NH(S1) + FE(S3) <=> N(S2) + H(S2) + FE(B)
   type: surface-cubic-Ea
   gas-order: 0
@@ -260,6 +237,7 @@ reactions:
   Ea1: 0.8938
   Ea2: 0.0017
   Ea3: -0.0000
+  
 - equation: NH(S1) + FE(S3) <=> N(S1) + H(S2) + FE(B)
   type: surface-cubic-Ea
   gas-order: 0
@@ -268,6 +246,7 @@ reactions:
   Ea1: 0.8938
   Ea2: 0.0017
   Ea3: -0.0000
+  
 - equation: N(S1) +  N(S2) + FE(B) <=>  N2(S1) + FE(S1)
   type: surface-cubic-Ea
   gas-order: 0
@@ -276,48 +255,7 @@ reactions:
   Ea1: -0.2410
   Ea2: 0.0037
   Ea3: -0.0000
-  #- equation: 2 N(S1) + FE(B) <=>  N2(S1) + FE(S1)
-  #type: surface-cubic-Ea
-  #gas-order: 0
-  #surface-order: 2
-  #Ea0: 268554.3793
-  #Ea1: -0.2410
-  #Ea2: 0.0037
-  #Ea3: -0.0000
-###############removed#############
-#- equation: N2(S1) + FE(S1) <=>  N2(S2) + FE(S1)
-#  type: surface-cubic-Ea
-#  A: 7.11147E+18
-#  b: 1.0
-#  Ea0: 69641.5689
-#  Ea1: -9.8979
-#  Ea2: 0.0088
-#  Ea3: -0.0000
-#- equation: H(S4) + FE(S1) <=>  H(S1) + FE(S1)
-#  rate-constant: {A: 7.11147E+18, b: 1.0, Ea: 0 eV}
-#- equation: H(S2) + FE(S1) <=>  H(S3) + FE(S1)
-#  rate-constant: {A: 7.11147E+18, b: 1.0, Ea: 0 eV}
-#
-#- equation: 2 H(S3) + FE(B) <=>  H2(S1) + FE(S1)
-#  type: surface-cubic-Ea
-#  A: 7.11147E+18
-#  b: 1.0
-#  Ea0: 65604.8049
-#  Ea1: -24.9871
-#  Ea2: 0.0094
-#  Ea3: 0.0000
-#
-#- equation: 2 H(S1) + FE(B) <=>  H2(S1) + FE(S1)
-#  type: surface-cubic-Ea
-#  A: 7.11147E+18
-#  b: 1.0
-#  Ea0: 43464.5182
-#  Ea1: -60.5803
-#  Ea2: 0.0055
-#  Ea3: 0.0000
-#####################################
 
-##############added##################
 - equation: N2(S1) + FE(B) <=>  N2 + FE(S1)
   type: surface-cubic-Ea
   gas-order: 0
@@ -344,7 +282,7 @@ reactions:
   Ea1: -60.5803
   Ea2: 0.0055
   Ea3: 0.0000
-#####################################
+
 - equation: H(S4) + FE(S3) <=>  H(S1) + FE(S3)
   type: surface-cubic-Ea
   gas-order: 0
@@ -353,6 +291,7 @@ reactions:
   Ea1: 0
   Ea2: 0
   Ea3: 0
+  
 - equation: H(S2) + FE(S3) <=>  H(S3) + FE(S3)
   type: surface-cubic-Ea
   gas-order: 0

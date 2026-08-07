@@ -1,13 +1,12 @@
 import cantera as ct
 import numpy as np
 import os
-from scipy.interpolate import interp1d
 from matplotlib import pyplot as plt
 from multiprocessing import Pool
-import pandas as pd
-import seaborn as sns
+from scipy.interpolate import interp1d
+import pandas as pd 
 
-        
+
 plt.rcParams['axes.linewidth'] = 3
 plt.rc('xtick', labelsize=30)
 plt.rc('ytick', labelsize=30)
@@ -38,13 +37,13 @@ plt.rcParams["errorbar.capsize"] = 6
 
 results = []
 
-def run_PHQ(T_profile, output_filename, para):
+def run_PHQ(T_profile, output_filename):
     global results
     #######################################################################
     # Input Parameters
     #######################################################################
     volumetric_flow=1/1e6 #volumetric flow rate in m3/s 
-    pressure=101325 #pressure Pa
+    pressure=2e5 #pressure Pa
     reactor_volume=1/1e6 #m^3
     specific_cat_area = 150000  # Catalyst specific surface area in m-1
 
@@ -52,16 +51,15 @@ def run_PHQ(T_profile, output_filename, para):
     time_arr = T_profile[:,0]
     temp_arr = T_profile[:,1]
     temp = temp_arr[0]
-    temp_arr_in = np.array([temp]*(len(temp_arr)))
 
     #input file containing the surface reaction mechanism
     cti_file1 ='thermo1.yaml'
     cti_file2 = 'thermo2.yaml'
     #import the gas phase model
     gas1 = ct.Solution(cti_file1, 'gas')
-    gas1.TPX = temp, pressure, 'H2:0.75, N2:0.25'
+    gas1.TPX = temp, pressure, 'N2:0.25, H2:0.75'
     gas2 = ct.Solution(cti_file2, 'gas')
-    gas2.TPX = temp, pressure, 'H2:0.75, N2:0.25'
+    gas2.TPX = temp, pressure, 'N2:0.25, H2:0.75'
     bulk1 = ct.Solution(cti_file1, 'bulk')
     bulk1.TP = temp, pressure
     bulk2 = ct.Solution(cti_file2, 'bulk')
@@ -84,7 +82,7 @@ def run_PHQ(T_profile, output_filename, para):
     ## catalyst area in one reactor
     cat_area = rvol*specific_cat_area
     mass_flow_rate =  volumetric_flow*gas1.mean_molecular_weight*pressure/ct.gas_constant/temp
-    mdot_data =  (volumetric_flow * gas1.mean_molecular_weight * pressure) / (ct.gas_constant * temp_arr_in)
+    mdot_data =  (volumetric_flow * gas1.mean_molecular_weight * pressure) / (ct.gas_constant * temp_arr)
     mdot_func = interp1d(time_arr, mdot_data, kind='linear', fill_value='extrapolate')
     initial_molar_flux=mass_flow_rate/gas1.mean_molecular_weight*1000
 
@@ -117,9 +115,9 @@ def run_PHQ(T_profile, output_filename, para):
     sim2.max_err_test_fails = 100
 
     # tolerances
-    sim1.rtol = 1.0e-6
+    sim1.rtol = 1.0e-8
     sim1.atol = 1.0e-10
-    sim2.rtol = 1.0e-6
+    sim2.rtol = 1.0e-8
     sim2.atol = 1.0e-10
 
     #set arrays
@@ -138,6 +136,23 @@ def run_PHQ(T_profile, output_filename, para):
     weights_array1 = np.zeros(len(time_arr))
     weights_array2 = np.zeros(len(time_arr))
     new_pressure = 101325
+    sim1.rtol_sensitivity = 1e-4
+    sim1.atol_sensitivity = 1e-6
+    sim2.rtol_sensitivity = 1e-4
+    sim2.atol_sensitivity = 1e-6
+    # Register all surface reactions for sensitivity analysis
+    for i in range(surf1.n_reactions):
+        rsurf1.add_sensitivity_reaction(i)
+    # Register all surface reactions for sensitivity analysis
+    for i in range(surf2.n_reactions):
+        rsurf2.add_sensitivity_reaction(i)
+    reverse_sensitivities1 = [[] for _ in range(surf1.n_reactions)]
+    reverse_sensitivities2 = [[] for _ in range(surf2.n_reactions)]
+    reaction_eqs1 = [surf1.reaction(i).equation for i in range(surf1.n_reactions)]
+    reaction_eqs2 = [surf2.reaction(i).equation for i in range(surf2.n_reactions)]
+    temp_sens = []
+    time_sens = []
+    perturbation = 0.01  # 1% perturbation
     
     #temperature pulsing
     for b in range(len(time_arr)): 
@@ -157,6 +172,21 @@ def run_PHQ(T_profile, output_filename, para):
         upstream2.syncState()
         sim1.advance(time_arr[b])
         sim2.advance(time_arr[b])
+        if sim1.time > 13 and sim1.time < 15: 
+            temp_sens.append(temp)
+            time_sens.append(sim1.time)
+            for i in range(surf2.n_reactions):
+                # Get sensitivity of NH3 to forward rate
+                df_dp = sim2.sensitivity("NH3", i)
+                reverse_sensitivities2[i].append(df_dp)
+            for i in range(surf1.n_reactions):
+                # Get sensitivity of NH3 to forward rate
+                df_dp = sim1.sensitivity("NH3", i)
+                reverse_sensitivities1[i].append(df_dp)
+            temperatures = np.array(temp_sens)
+            times = np.array(time_sens)
+            sensitivities1 = [np.array(sens) for sens in reverse_sensitivities1]
+            sensitivities2 = [np.array(sens) for sens in reverse_sensitivities2]
         increments1[b] = sim1.time   # time 
         increments2[b] = sim2.time   # time 
         coverages1[b,:]=surf1.X      # surface coverages
@@ -204,6 +234,52 @@ def run_PHQ(T_profile, output_filename, para):
         new_pressure_1 = mass1*ct.gas_constant*temp/gas1.mean_molecular_weight/reactor_volume  
         new_pressure_2 = mass2*ct.gas_constant*temp/gas2.mean_molecular_weight/reactor_volume  
         new_pressure = new_pressure_1*weights_array1[b] + new_pressure_2*weights_array2[b]
+        
+    # Plot sensitivity of each reaction vs temperature
+    plt.figure(figsize=(10, 6))
+    for i, sens in enumerate(sensitivities1):
+        plt.plot(temperatures, sens, label=f"Rxn {i}: {reaction_eqs1[i]}")
+    plt.xlabel("temperature [K]")
+    plt.ylabel("sensitivity coefficient")
+    plt.legend(loc="best", fontsize="small")
+    plt.savefig(f"{output_filename}_sen1.png", dpi=300, bbox_inches="tight")
+    plt.figure(figsize=(10, 6))
+    for i, sens in enumerate(sensitivities2):
+        plt.plot(temperatures, sens, label=f"Rxn {i}: {reaction_eqs2[i]}")
+    plt.xlabel("temperature [K]")
+    plt.ylabel("sensitivity coefficient")
+    plt.legend(loc="best", fontsize="small")
+    plt.savefig(f"{output_filename}_sen2.png", dpi=300, bbox_inches="tight")
+    avg_sens1 = [np.mean(sens) for sens in sensitivities1]
+    avg_sens2 = [np.mean(sens) for sens in sensitivities2]
+
+    plt.figure(figsize=(10, 10))
+    plt.bar(range(len(avg_sens1)), avg_sens1, tick_label=reaction_eqs1)
+    plt.xticks(rotation=90)
+    plt.xlabel("Reaction")
+    plt.ylabel("Average sensitivity coefficient")
+    plt.tight_layout()
+    plt.savefig(f"{output_filename}_avg_rxn_vs_sens1.png", dpi=300)
+
+    plt.figure(figsize=(10, 10))
+    plt.bar(range(len(avg_sens2)), avg_sens2, tick_label=reaction_eqs2)
+    plt.xticks(rotation=90)
+    plt.xlabel("Reaction")
+    plt.ylabel("Average sensitivity coefficient")
+    plt.tight_layout()
+    plt.savefig(f"{output_filename}_avg_rxn_vs_sens2.png", dpi=300)
+
+    data1 = {f"Rxn {i}: {reaction_eqs1[i]}": sensitivities1[i] for i in range(len(reaction_eqs1))}
+
+    df1 = pd.DataFrame(data1)
+    df1.insert(0, "Temperature [K]", temperatures)
+    df1.insert(1, "Time [s]", times)
+    df1.to_csv("sensitivities1.csv", index=False)
+    data2 = {f"Rxn {i}: {reaction_eqs2[i]}": sensitivities2[i] for i in range(len(reaction_eqs2))}
+    df2 = pd.DataFrame(data2)
+    df2.insert(0, "Temperature [K]", temperatures)
+    df2.insert(1, "Time [s]", times)
+    df2.to_csv("sensitivities2.csv", index=False)
 
     species_duplicate = ["N2(S2)", "H2(S1)", "NH3(S1)"]  # Modify based on what you want to exclude
     species_names1 = surf1.species_names
@@ -250,7 +326,7 @@ def run_PHQ(T_profile, output_filename, para):
     T = t_increments
     sorted_coverages = filtered_wcoverages1[(T > 200.15) & (T < 1473.15)] + filtered_wcoverages2[(T > 200.15)& (T < 1473.15)] 
     sorted_moles = mole_fracs1_weighted[(T > 200.15) & (T < 1473.15)] + mole_fracs2_weighted[(T > 200.15)& (T < 1473.15)] 
-    sorted_time  = increments1[(T > 200.15) & (T < 1473.15)]     
+    sorted_time = increments1[(T > 200.15) & (T < 1473.15)]     
     
     data=np.c_[sorted_time, t_increments, sorted_moles, sorted_coverages, weights_array1, weights_array2]
     print('writing results into {}'.format(output_filename))
@@ -297,7 +373,7 @@ def run_PHQ(T_profile, output_filename, para):
     plt.ylabel(r'mole fraction NH$_3$ [ppm]')
     plt.legend()
     plt.xlim([10,15])
-    plt.ylim([0,1200])
+    plt.ylim([0,1000])
     plt.grid(False)
     plt.savefig(f"{output_filename}_gas.png", dpi=300, bbox_inches="tight")
     
@@ -337,8 +413,6 @@ def run_PHQ(T_profile, output_filename, para):
 
     # Store results
     results.append({
-        'Th': para[0],
-        'Tc': para[1],
         'avg_NH3_between_mins': avg_NH3_between,
         'avg_T_between_mins': avg_T_between
     })
@@ -346,13 +420,11 @@ def run_PHQ(T_profile, output_filename, para):
     print("Just added to results:", results[-1])
 
     return {
-        'Th': para[0],
-        'Tc': para[1],
         'avg_NH3_between_mins': avg_NH3_between,
         'avg_T_between_mins': avg_T_between
     }
     
-def cal_T_profile(T_h, T_c, para_h, para_rc, para_cc, dt=0.0001, t_total = 25, T_th=1100):
+def cal_T_profile(T_h, T_c, para_h, para_rc, para_cc, dt=0.0001, t_total=25, T_th=1100,):
     #generate pulse heating temperature profile T_profile=[t, T]
     #T_h: heating(maximum) temperature (K)
     #T_c: cooling(original) temperature (K)
@@ -404,113 +476,46 @@ def cal_T_profile(T_h, T_c, para_h, para_rc, para_cc, dt=0.0001, t_total = 25, T
     T_profile = np.vstack((t,T)).T
     return T_profile
 
-from scipy.optimize import minimize_scalar
-
-def cal_pulse_error(fre, para, para_h_ori, para_rc_ori, para_cc_ori, target_cycle_duration, T_th=1100, dt=0.0001):
-    Tc = para[1]
-    
-    # Generate temperature profile with current frequency factor
-    T_profile_trial = cal_T_profile(
-        para[0], Tc,
-        para_h_ori * fre,
-        para_rc_ori(Tc) * fre,
-        para_cc_ori(Tc) * fre,
-        dt=dt, t_total=25, T_th=T_th
-    )
-    
-    # Find pulse cycle length: when it returns near Tc
-    tol = 0.05
-    matches = np.where(np.abs(T_profile_trial[:, 1] - Tc) < tol)[0]
-    if len(matches) >= 2:
-        pulse_time = T_profile_trial[matches[1], 0]
-        return abs(pulse_time - target_cycle_duration)  # Goal is to minimize difference from 1 second
-    else:
-        return np.inf  # invalid cycle
-
-def single_task(para):
-    durations = [1.0]
-    Tc = para[1]
-    para_h_ori = 3105
-    para_rc_ori = lambda Tc: np.array([5.039e-9, 5274.4+(1.912*Tc/1.0657)])
-    para_cc_ori = lambda Tc: np.array([-1.912, 1.912*Tc/1.0657])
-
-    # Optimize frequency scaling factor to make pulse = 1 sec
-    for duration in durations:
-        opt_result = minimize_scalar(
-            cal_pulse_error,
-            bounds=(0.1, 10.0),
-            method='bounded',
-            args=(para, para_h_ori, para_rc_ori, para_cc_ori, duration))
-
-        if not opt_result.success:
-            print(f"Optimization failed for {para}")
-            return
-
-    optimal_fre = opt_result.x
-    print(f"Optimal frequency factor for {para} is {optimal_fre:.4f}")
-
-    # Use optimized frequency to generate final profile
-    para_h_scaled = para_h_ori * optimal_fre
-    para_rc_scaled = para_rc_ori(para[1]) * optimal_fre
-    para_cc_scaled = para_cc_ori(para[1]) * optimal_fre
-
-    T_profile_final = cal_T_profile(para[0], para[1], para_h_scaled, para_rc_scaled, para_cc_scaled, dt=0.0001, t_total=25)
+def single_task(T):
+    para_h_ori = 4000
+    #para_rc_ori = np.array([5.04e-9, 7169.8])
+    #para_cc_ori = np.array([-1.912, 1659.44])
+    #para_rc_ori = lambda Tc: np.array([5.04e-9, 7169.8/925*Tc])
+    #para_cc_ori = lambda Tc: np.array([-1.912, 1659.44/925*Tc])
+    #T_profile = cal_T_profile(para[0],para[1],para_h_ori*para[2],para_rc_ori(para[1])*para[3],para_cc_ori(para[1])*para[3],t_total = 50)
     current_dir = os.getcwd()
-    name = "Th={}_Tc={}_hr={}_cr={}.csv".format(para[0],para[1],para[2],para[3])
+    name = "T={}.csv".format(T)
     filename = os.path.join(current_dir,name)
-    metrics = run_PHQ(T_profile_final,filename, para)
+    time = np.arange(0,25,0.0001)
+    temp = np.ones(len(time)) * T
+    T_profile = np.vstack((time,temp)).T
+    run_PHQ(T_profile,filename)
+    metrics = run_PHQ(T_profile,filename)
     return metrics
 
 if __name__ == '__main__':
-    para_h_ori = 3105
+    #para_h_ori = 4000
     #para_rc_ori = np.array([5.04e-9, 7169.8])
     #para_cc_ori = np.array([-1.912, 1659.44])
-    para_rc_ori = lambda Tc: np.array([5.039e-9, 5274.4+(1.912*Tc/1.0657)])
-    para_cc_ori = lambda Tc: np.array([-1.912, 1.912*Tc/1.0657])
+    #para_rc_ori = lambda Tc: np.array([5.04e-9, 7169.8/925*Tc])
+    #para_cc_ori = lambda Tc: np.array([-1.912, 1659.44/925*Tc])
 
-    base_values = [800,800,800,
-                   900,900,900,900,
-                   1000,1000,1000,1000,1000,
-                   1100,1100,1100,1100,1100,
-                   1200,1200,1200,1200,1200,
-                   1300,1300,1300,1300,1300,
-                   1400,1400,1400,1400,1400]
-    T_h_arr = np.array(base_values)
-    base_values = [500,600,700,
-                   500,600,700,800,
-                   500,600,700,800,900,
-                   500,600,700,800,900,
-                   500,600,700,800,900,
-                   500,600,700,800,900,
-                   500,600,700,800,900]
-    T_c_arr = np.array(base_values)
-    # Create the base values
-    #base_values = np.arange(1000, 1401, 100)
-    # Repeat each value x times
-    #T_h_arr = np.repeat(base_values, 5)
-    #base_values = np.arange(400, 801, 100)
-    # Repeat the block x times
-    #T_c_arr = np.tile(base_values, 5)
-    fre_factor_arr = (np.linspace(1, 2, 1))
-    combinations = [(Th, Tc, fre, fre) for Th,Tc in zip(T_h_arr,T_c_arr) for fre in fre_factor_arr]
-    print (combinations)
+    #T_h_arr = np.array([873.15])
+    #T_c_arr = np.array([643.15])
+    #fre_factor_arr = np.exp(np.linspace(-np.log(16),np.log(16),32))
+    #combinations = [(Th, Tc, fre, fre) for Th,Tc in zip(T_h_arr,T_c_arr) for fre in fre_factor_arr]
+    #print (combinations)
+    #T_list = [500.15, 525.15, 573.15, 760.15, 750.15, 800.15, 900.15, 673.15, 725.15, 773.15, 891.15, 1200.15]
+    T_list = [700]
     with Pool(processes=8) as pool:
-        results = pool.map(single_task, combinations)
-
+        results = pool.map(single_task, T_list)
+        
+import pandas as pd 
+   
 print("Length of results:", len(results))
 for i, entry in enumerate(results[:5]):
     print(f"Entry {i}: {entry}")
 df = pd.DataFrame(results)
 print("Columns in df:", df.columns)
 print("Sample rows:\n", df.head())
-df.to_csv("pulse_metrics.csv", index=False)
-pivot = df.pivot_table(index='Th', columns='Tc', values='avg_NH3_between_mins')
-plt.figure(figsize=(10, 8))
-ax = sns.heatmap(pivot, cmap="YlGnBu", fmt=".4f", vmin = 0, vmax = 0.0009, cbar_kws={'label': 'mole fraction NH$_3$'})
-ax.tick_params(axis='both', direction='out')
-plt.gca().invert_yaxis()
-plt.xlabel("Min Temperature [K]")
-plt.ylabel("Max Temperature [K]")
-plt.tight_layout()
-plt.savefig("heatmap_NH3_vs_Textremes.png", dpi=300)
-
+df.to_csv("iso_metrics.csv", index=False)

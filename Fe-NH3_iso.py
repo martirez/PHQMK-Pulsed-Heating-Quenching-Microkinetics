@@ -66,10 +66,10 @@ def run_PHQ(T_profile, output_filename):
     # import the surface model
     surf1 = ct.Interface(cti_file1,'surface1', [gas1, bulk1])
     surf1.TP = temp, pressure
-    surf1.coverages = {'FE(S3)': 0.667, 'N(S2)': 0.222, 'FE(S1)':0.111}
+    surf1.coverages = {'FE(S3)': 0.667, 'NH(S1)': 0, 'N(S2)': 0.111, 'FE(S1)':0.222}
     surf2 = ct.Interface(cti_file2,'surface1', [gas2, bulk2])
     surf2.TP = temp, pressure
-    surf2.coverages = {'FE(S3)': 0.889, 'N(S2)':0.111}
+    surf2.coverages = {'FE(S3)': 0.889, 'NH(S1)': 0, 'N(S2)': 0.111, 'FE(S1)':0}
     # Loop through reactions and print their rate types
     for i, r in enumerate(surf1.reactions()):
         print(f"Reaction {i}: {r.equation}")
@@ -162,7 +162,7 @@ def run_PHQ(T_profile, output_filename):
         mole_fracs2[b,:]=gas2.X      # gas mole fractions
         t_increments[b]= temp      # temp at time step     
         if b == 0: 
-           weights_array1[b] = 0.864
+           weights_array1[b] = 0.136
            weights_array2[b] = (1-weights_array1[b])
            weighted_results1[b, :] = coverages1[b, :] * weights_array1[b]
            weighted_results2[b, :] = coverages2[b, :] * weights_array2[b]
@@ -183,10 +183,10 @@ def run_PHQ(T_profile, output_filename):
            species_names1_filtered = [species_names1[i] for i in keep_indices1]
            species_names2_filtered = [species_names2[i] for i in keep_indices2]
            coverages1_new = weighted_results1[b-1, keep_indices1] + weighted_results2[b-1, keep_indices2]
-           coverages1_r = coverages1_new / np.sum(coverages1_new)
-           renormalized_values1 = dict(zip(species_names1_filtered, coverages1_r))
-           desired_species = ["FE(S3)", "FE(S1)"] 
-           surf_tot = 1-(renormalized_values1.get("FE(S3)", 0) + renormalized_values1.get("FE(S1)", 0))
+           #coverages1_r = coverages1_new / np.sum(coverages1_new)
+           renormalized_values1 = dict(zip(species_names1_filtered, coverages1_new))
+           desired_species = ["N(S2)", "N(S1)", "NH(S1)"] #["FE(S3)", "FE(S1)"] 
+           surf_tot = (renormalized_values1.get("N(S2)", 0) + renormalized_values1.get("N(S1)", 0) + renormalized_values1.get("NH(S1)", 0))
            weights_array1[b] = 1/(1+np.exp(-(surf_tot-(3/18))*100/3))
            weights_array2[b] = (1-weights_array1[b])
            weighted_results1[b, :] = coverages1[b, :] * weights_array1[b]
@@ -213,14 +213,14 @@ def run_PHQ(T_profile, output_filename):
     coverages2_new = coverages2[:, keep_indices2]
     weighted_results1_new = weighted_results1[:, keep_indices1]
     weighted_results2_new = weighted_results2[:, keep_indices2]
-    coverages1_r = coverages1_new / coverages1_new.sum(axis=1, keepdims=True)
-    coverages2_r = coverages2_new / coverages2_new.sum(axis=1, keepdims=True)
+    coverages1_r = coverages1_new #/ coverages1_new.sum(axis=1, keepdims=True)
+    coverages2_r = coverages2_new #/ coverages2_new.sum(axis=1, keepdims=True)
     weights_array1_1 = np.tile(weights_array1[:, np.newaxis], (1, 11))
     weights_array2_1 = np.tile(weights_array2[:, np.newaxis], (1, 11))
     weights_array1_2 = np.tile(weights_array1[:, np.newaxis], (1, 3))
     weights_array2_2 = np.tile(weights_array2[:, np.newaxis], (1, 3))
-    weighted_results1_r = coverages1_new / coverages1_new.sum(axis=1, keepdims=True)*weights_array1_1
-    weighted_results2_r = coverages2_new / coverages2_new.sum(axis=1, keepdims=True)*weights_array2_1
+    weighted_results1_r = coverages1_new*weights_array1_1 #/ coverages1_new.sum(axis=1, keepdims=True)*weights_array1_1
+    weighted_results2_r = coverages2_new*weights_array2_1 #/ coverages2_new.sum(axis=1, keepdims=True)*weights_array2_1
     mole_fracs1_weighted=mole_fracs1*weights_array1_2
     mole_fracs2_weighted=mole_fracs2*weights_array2_2
     
@@ -345,7 +345,7 @@ def run_PHQ(T_profile, output_filename):
         'avg_T_between_mins': avg_T_between
     }
     
-def cal_T_profile(T_h, T_c, para_h, para_rc, para_cc, dt=0.0001, t_total=25, T_th=1100,):
+def cal_T_profile(T_h, T_c, para_h, para_rc, para_cc, dt=0.001, t_total=25, T_th=1100,):
     #generate pulse heating temperature profile T_profile=[t, T]
     #T_h: heating(maximum) temperature (K)
     #T_c: cooling(original) temperature (K)
@@ -398,10 +398,16 @@ def cal_T_profile(T_h, T_c, para_h, para_rc, para_cc, dt=0.0001, t_total=25, T_t
     return T_profile
 
 def single_task(T):
+    para_h_ori = 4000
+    #para_rc_ori = np.array([5.04e-9, 7169.8])
+    #para_cc_ori = np.array([-1.912, 1659.44])
+    #para_rc_ori = lambda Tc: np.array([5.04e-9, 7169.8/925*Tc])
+    #para_cc_ori = lambda Tc: np.array([-1.912, 1659.44/925*Tc])
+    #T_profile = cal_T_profile(para[0],para[1],para_h_ori*para[2],para_rc_ori(para[1])*para[3],para_cc_ori(para[1])*para[3],t_total = 50)
     current_dir = os.getcwd()
     name = "T={}.csv".format(T)
     filename = os.path.join(current_dir,name)
-    time = np.arange(0,25,0.0001)
+    time = np.arange(0,25,0.001)
     temp = np.ones(len(time)) * T
     T_profile = np.vstack((time,temp)).T
     run_PHQ(T_profile,filename)
@@ -409,7 +415,53 @@ def single_task(T):
     return metrics
 
 if __name__ == '__main__':
-    T_list = [1332,921,1023.6399760563563]
+    #para_h_ori = 4000
+    #para_rc_ori = np.array([5.04e-9, 7169.8])
+    #para_cc_ori = np.array([-1.912, 1659.44])
+    #para_rc_ori = lambda Tc: np.array([5.04e-9, 7169.8/925*Tc])
+    #para_cc_ori = lambda Tc: np.array([-1.912, 1659.44/925*Tc])
+
+    #T_h_arr = np.array([873.15])
+    #T_c_arr = np.array([643.15])
+    #fre_factor_arr = np.exp(np.linspace(-np.log(16),np.log(16),32))
+    #combinations = [(Th, Tc, fre, fre) for Th,Tc in zip(T_h_arr,T_c_arr) for fre in fre_factor_arr]
+    #print (combinations)
+    #T_list = [500.15, 525.15, 573.15, 760.15, 750.15, 800.15, 900.15, 673.15, 725.15, 773.15, 891.15, 1200.15]
+    #T_list = np.array([521.3509436, 598.8443257, 672.2103977, 740.6244394, 800, 547.0001597, 626.2972299, 701.9486338, 774.0731916, 841.3287694, 900, 941.9567889, 572.3735436, 653.1806058, 730.5606362, 804.8056298, 875.6150347, 976.9984815, 597.5069342, 679.4513512, 758.0797508, 834.0649539, 907.1558772, 993.6040289, 609.3786184, 691.5265126, 770.4370598, 846.8528258, 920.8371335, 1005.001405, 620.8172088, 702.8555299, 781.7939721, 858.1367261, 932.1875208, 1016.86649, 632.3343548, 714.3932239, 793.3323089, 869.6378112, 943.7727813])
+    T_list = [599.5755064258556,
+            672.5973117305127,
+            740.7523860740492,
+            800,
+            627.6527807835525,
+            702.7617451769859,
+            774.4268257367403,
+            841.4300777521161,
+            900,
+            655.1610267222086,
+            731.8765901105556,
+            805.5893929680988,
+            875.9987214925137,
+            942.0959485833921,
+            682.3291112229139,
+            760.3227348294773,
+            835.4401029090186,
+            907.9431234698501,
+            977.37008200179,
+            700.9959270044916,
+            778.6069014451348,
+            853.3928745649006,
+            925.3123421088386,
+            994.1018174316887,
+            715.0694934114372,
+            792.3363891936193,
+            866.7083230358468,
+            938.2776423800879,
+            1006.9445452254731,
+            728.826636857342,
+            805.8425659633094,
+            880.082822493808,
+            951.5781814883071,
+            1020.6792549802898]
     with Pool(processes=8) as pool:
         results = pool.map(single_task, T_list)
         

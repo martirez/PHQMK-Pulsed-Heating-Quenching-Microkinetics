@@ -69,10 +69,10 @@ def run_PHQ(T_profile, output_filename, para):
     # import the surface model
     surf1 = ct.Interface(cti_file1,'surface1', [gas1, bulk1])
     surf1.TP = temp, pressure
-    surf1.coverages = {'FE(S3)': 0.667, 'N(S2)': 0.222, 'FE(S1)':0.111}
+    surf1.coverages = {'FE(S3)': 0.667, 'NH(S1)': 0, 'N(S2)': 0.111, 'FE(S1)':0.222}
     surf2 = ct.Interface(cti_file2,'surface1', [gas2, bulk2])
     surf2.TP = temp, pressure
-    surf2.coverages = {'FE(S3)': 0.889, 'N(S2)':0.111}
+    surf2.coverages = {'FE(S3)': 0.889, 'NH(S1)': 0, 'N(S2)': 0.111, 'FE(S1)':0}
     # Loop through reactions and print their rate types
     for i, r in enumerate(surf1.reactions()):
         print(f"Reaction {i}: {r.equation}")
@@ -117,9 +117,9 @@ def run_PHQ(T_profile, output_filename, para):
     sim2.max_err_test_fails = 100
 
     # tolerances
-    sim1.rtol = 1.0e-8
+    sim1.rtol = 1.0e-6
     sim1.atol = 1.0e-10
-    sim2.rtol = 1.0e-8
+    sim2.rtol = 1.0e-6
     sim2.atol = 1.0e-10
 
     #set arrays
@@ -165,7 +165,7 @@ def run_PHQ(T_profile, output_filename, para):
         mole_fracs2[b,:]=gas2.X      # gas mole fractions
         t_increments[b]= temp      # temp at time step     
         if b == 0: 
-           weights_array1[b] = 0.864
+           weights_array1[b] = 0.136
            weights_array2[b] = (1-weights_array1[b])
            weighted_results1[b, :] = coverages1[b, :] * weights_array1[b]
            weighted_results2[b, :] = coverages2[b, :] * weights_array2[b]
@@ -186,10 +186,10 @@ def run_PHQ(T_profile, output_filename, para):
            species_names1_filtered = [species_names1[i] for i in keep_indices1]
            species_names2_filtered = [species_names2[i] for i in keep_indices2]
            coverages1_new = weighted_results1[b-1, keep_indices1] + weighted_results2[b-1, keep_indices2]
-           coverages1_r = coverages1_new / np.sum(coverages1_new)
-           renormalized_values1 = dict(zip(species_names1_filtered, coverages1_r))
-           desired_species = ["FE(S3)", "FE(S1)"] 
-           surf_tot = 1-(renormalized_values1.get("FE(S3)", 0) + renormalized_values1.get("FE(S1)", 0))
+           #coverages1_r = coverages1_new / np.sum(coverages1_new)
+           renormalized_values1 = dict(zip(species_names1_filtered, coverages1_new))
+           desired_species = ["N(S2)", "N(S1)", "NH(S1)"] #["FE(S3)", "FE(S1)"] 
+           surf_tot = (renormalized_values1.get("N(S2)", 0) + renormalized_values1.get("N(S1)", 0) + renormalized_values1.get("NH(S1)", 0))
            weights_array1[b] = 1/(1+np.exp(-(surf_tot-(3/18))*100/3))
            weights_array2[b] = (1-weights_array1[b])
            weighted_results1[b, :] = coverages1[b, :] * weights_array1[b]
@@ -216,14 +216,14 @@ def run_PHQ(T_profile, output_filename, para):
     coverages2_new = coverages2[:, keep_indices2]
     weighted_results1_new = weighted_results1[:, keep_indices1]
     weighted_results2_new = weighted_results2[:, keep_indices2]
-    coverages1_r = coverages1_new / coverages1_new.sum(axis=1, keepdims=True)
-    coverages2_r = coverages2_new / coverages2_new.sum(axis=1, keepdims=True)
+    coverages1_r = coverages1_new #/ coverages1_new.sum(axis=1, keepdims=True)
+    coverages2_r = coverages2_new #/ coverages2_new.sum(axis=1, keepdims=True)
     weights_array1_1 = np.tile(weights_array1[:, np.newaxis], (1, 11))
     weights_array2_1 = np.tile(weights_array2[:, np.newaxis], (1, 11))
     weights_array1_2 = np.tile(weights_array1[:, np.newaxis], (1, 3))
     weights_array2_2 = np.tile(weights_array2[:, np.newaxis], (1, 3))
-    weighted_results1_r = coverages1_new / coverages1_new.sum(axis=1, keepdims=True)*weights_array1_1
-    weighted_results2_r = coverages2_new / coverages2_new.sum(axis=1, keepdims=True)*weights_array2_1
+    weighted_results1_r = coverages1_new*weights_array1_1 #/ coverages1_new.sum(axis=1, keepdims=True)*weights_array1_1
+    weighted_results2_r = coverages2_new*weights_array2_1 #/ coverages2_new.sum(axis=1, keepdims=True)*weights_array2_1
     mole_fracs1_weighted=mole_fracs1*weights_array1_2
     mole_fracs2_weighted=mole_fracs2*weights_array2_2
     
@@ -445,12 +445,14 @@ def single_task(para):
 
 if __name__ == '__main__':
     para_h_ori = 3105
+    #para_rc_ori = np.array([5.04e-9, 7169.8])
+    #para_cc_ori = np.array([-1.912, 1659.44])
     para_rc_ori = lambda Tc: np.array([5.039e-9, 5274.4+(1.912*Tc/1.0657)])
     para_cc_ori = lambda Tc: np.array([-1.912, 1.912*Tc/1.0657])
 
-    base_values = [1332]
+    base_values = [1200]
     T_h_arr = np.array(base_values)
-    base_values = [925]
+    base_values = [700]
     T_c_arr = np.array(base_values)
     fre_factor_arr = (np.linspace(1, 2, 1))
     combinations = [(Th, Tc, fre, fre) for Th,Tc in zip(T_h_arr,T_c_arr) for fre in fre_factor_arr]

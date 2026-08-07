@@ -115,7 +115,7 @@ def run_PHQ(T_profile, output_filename, para):
     # The maximum number of error test failures permitted by the CVODES integrator in a single step. 
     sim1.max_err_test_fails = 100
     sim2.max_err_test_fails = 100
-
+    
     # tolerances
     sim1.rtol = 1.0e-6
     sim1.atol = 1.0e-10
@@ -138,6 +138,25 @@ def run_PHQ(T_profile, output_filename, para):
     weights_array1 = np.zeros(len(time_arr))
     weights_array2 = np.zeros(len(time_arr))
     new_pressure = 101325
+    sim1.rtol_sensitivity = 1e-4
+    sim1.atol_sensitivity = 1e-6
+    sim2.rtol_sensitivity = 1e-4
+    sim2.atol_sensitivity = 1e-6
+    # Register all surface reactions for sensitivity analysis
+    for i in range(surf1.n_reactions):
+        rsurf1.add_sensitivity_reaction(i)
+    # Register all surface reactions for sensitivity analysis
+    for i in range(surf2.n_reactions):
+        rsurf2.add_sensitivity_reaction(i)
+    reverse_sensitivities1 = [[] for _ in range(surf1.n_reactions)]
+    reverse_sensitivities2 = [[] for _ in range(surf2.n_reactions)]
+    reaction_eqs1 = [surf1.reaction(i).equation for i in range(surf1.n_reactions)]
+    reaction_eqs2 = [surf2.reaction(i).equation for i in range(surf2.n_reactions)]
+    temp_sens = []
+    time_sens = []
+    sensitivities1 = []
+    sensitivities2 = []
+    perturbation = 0.01  # 1% perturbation
     
     #temperature pulsing
     for b in range(len(time_arr)): 
@@ -151,12 +170,27 @@ def run_PHQ(T_profile, output_filename, para):
         r1.syncState()
         r2.syncState()
         temp = temp_arr[b]
-        gas1.TPX = temp, pressure, 'H2:0.75, N2:0.25'
-        gas2.TPX = temp, pressure, 'H2:0.75, N2:0.25'
+        gas1.TPX = temp, pressure, 'N2:0.25, H2:0.75'
+        gas2.TPX = temp, pressure, 'N2:0.25, H2:0.75'
         upstream1.syncState()
         upstream2.syncState()
         sim1.advance(time_arr[b])
         sim2.advance(time_arr[b])
+        if sim1.time > 13 and sim1.time < 15: 
+            temp_sens.append(temp)
+            time_sens.append(sim1.time)
+            for i in range(surf2.n_reactions):
+                # Get sensitivity of NH3 to forward rate
+                df_dp = sim2.sensitivity("NH3", i)
+                reverse_sensitivities2[i].append(df_dp)
+            for i in range(surf1.n_reactions):
+                # Get sensitivity of NH3 to forward rate
+                df_dp = sim1.sensitivity("NH3", i)
+                reverse_sensitivities1[i].append(df_dp)
+            temperatures = np.array(temp_sens)
+            times = np.array(time_sens)
+            sensitivities1 = [np.array(sens) for sens in reverse_sensitivities1]
+            sensitivities2 = [np.array(sens) for sens in reverse_sensitivities2]
         increments1[b] = sim1.time   # time 
         increments2[b] = sim2.time   # time 
         coverages1[b,:]=surf1.X      # surface coverages
@@ -204,7 +238,20 @@ def run_PHQ(T_profile, output_filename, para):
         new_pressure_1 = mass1*ct.gas_constant*temp/gas1.mean_molecular_weight/reactor_volume  
         new_pressure_2 = mass2*ct.gas_constant*temp/gas2.mean_molecular_weight/reactor_volume  
         new_pressure = new_pressure_1*weights_array1[b] + new_pressure_2*weights_array2[b]
-
+        
+        
+    # Plot sensitivity of each reaction vs temperature
+    data1 = {f"Rxn {i}: {reaction_eqs1[i]}": sensitivities1[i] for i in range(len(reaction_eqs1))}
+    df1 = pd.DataFrame(data1)
+    df1.insert(0, "Temperature [K]", temperatures)
+    df1.insert(1, "Time [s]", times)
+    df1.to_csv("sensitivities1.csv", index=False)
+    data2 = {f"Rxn {i}: {reaction_eqs2[i]}": sensitivities2[i] for i in range(len(reaction_eqs2))}
+    df2 = pd.DataFrame(data2)
+    df2.insert(0, "Temperature [K]", temperatures)
+    df2.insert(1, "Time [s]", times)
+    df2.to_csv("sensitivities2.csv", index=False)
+    
     species_duplicate = ["N2(S2)", "H2(S1)", "NH3(S1)"]  # Modify based on what you want to exclude
     species_names1 = surf1.species_names
     species_names2 = surf2.species_names
@@ -313,8 +360,8 @@ def run_PHQ(T_profile, output_filename, para):
 
 
     #average_ammonia
-    window_1 = (x_s >= 15.5) & (x_s <= 16.5)
-    window_2 = (x_s >= 23.5) & (x_s <= 24.5)
+    window_1 = (x_s >= 14.5) & (x_s <= 15.5)
+    window_2 = (x_s >= 22.5) & (x_s <= 23.5)
 
     # Get time and temperature within those windows
     x_1 = x_s[window_1]
@@ -352,7 +399,7 @@ def run_PHQ(T_profile, output_filename, para):
         'avg_T_between_mins': avg_T_between
     }
     
-def cal_T_profile(T_h, T_c, para_h, para_rc, para_cc, dt=0.0001, t_total = 25, T_th=1100):
+def cal_T_profile(T_h, T_c, para_h, para_rc, para_cc, dt=0.001, t_total=25, T_th=1100):
     #generate pulse heating temperature profile T_profile=[t, T]
     #T_h: heating(maximum) temperature (K)
     #T_c: cooling(original) temperature (K)
@@ -365,48 +412,51 @@ def cal_T_profile(T_h, T_c, para_h, para_rc, para_cc, dt=0.0001, t_total = 25, T
 
     t = np.arange(0, t_total, dt)
     T = np.zeros(len(t))
-    T[0] = T_c
-    i = 0
-    while i+1 < len(t) and T[i] < T_h:
-        T[i+1] = T[i] + dt * (para_h)
-        i += 1
-    
-    if i+1 == len(t):
-        T_profile = np.vstack((t,T)).T
-        return T_profile
+    cyc = 1  # duration of one pulse in seconds
+    pulse_len = int(cyc / dt)
+    num_cycles = len(t) // pulse_len
 
-    while i+1 < len(t) and T[i] > T_th:
-        T[i+1] = T[i] + dt * (-para_rc[0]*T[i]**4+para_rc[1])
-        i += 1
-    
-    if i+1 == len(t):
-        T_profile = np.vstack((t,T)).T
-        return T_profile
-    
-    while i+1 < len(t) and T[i] > T_c:
-        T[i+1] = T[i] + dt * (para_cc[0]*T[i]+para_cc[1])
-        i += 1
+    current_T = T_c  # initial temperature
 
-    if i+1 == len(t):
-        T_profile = np.vstack((t,T)).T 
-        return T_profile
-    
-    pulse_len = i
-    while i+1+pulse_len < len(t):
-        T[i+1:i+1+pulse_len]=T[0:pulse_len]
-        i = i + pulse_len
-    
-    if i+1 == len(t):
-        T_profile = np.vstack((t,T)).T 
-        return T_profile
-    
-    T[i+1:] = T[:len(t)-i-1]
-    T_profile = np.vstack((t,T)).T
+    full_profile = []
+
+    for cycle in range(num_cycles):
+        pulse_T = np.zeros(pulse_len)
+        pulse_T[0] = current_T
+        i = 0
+
+        # Heating
+        while i + 1 < pulse_len and pulse_T[i] < T_h:
+            pulse_T[i + 1] = pulse_T[i] + dt * para_h
+            i += 1
+
+        # Radiative cooling
+        while i + 1 < pulse_len and pulse_T[i] > T_th:
+            pulse_T[i + 1] = pulse_T[i] + dt * (-para_rc[0] * pulse_T[i]**4 + para_rc[1])
+            i += 1
+
+        # Convective cooling
+        while i + 1 < pulse_len:
+            pulse_T[i + 1] = pulse_T[i] + dt * (para_cc[0] * pulse_T[i] + para_cc[1])
+            i += 1
+
+        # Extend convective cooling if needed
+        while len(pulse_T) < pulse_len:
+            next_T = pulse_T[-1] + dt * (para_cc[0] * pulse_T[-1] + para_cc[1])
+            pulse_T = np.append(pulse_T, next_T)
+
+        full_profile.extend(pulse_T)
+        current_T = pulse_T[-1] # update starting temp for next cycle
+
+    # Trim to match array length
+    t = np.array(t[:len(full_profile)])
+    T_profile = np.vstack((t, full_profile)).T
+
     return T_profile
 
 from scipy.optimize import minimize_scalar
 
-def cal_pulse_error(fre, para, para_h_ori, para_rc_ori, para_cc_ori, target_cycle_duration, T_th=1100, dt=0.0001):
+def cal_pulse_error(fre, para, para_h_ori, para_rc_ori, para_cc_ori, target_cycle_duration, T_th=1100, dt=0.001):
     Tc = para[1]
     
     # Generate temperature profile with current frequency factor
@@ -433,30 +483,9 @@ def single_task(para):
     para_h_ori = 3105
     para_rc_ori = lambda Tc: np.array([5.039e-9, 5274.4+(1.912*Tc/1.0657)])
     para_cc_ori = lambda Tc: np.array([-1.912, 1.912*Tc/1.0657])
-
-    # Optimize frequency scaling factor to make pulse = 1 sec
-    for duration in durations:
-        opt_result = minimize_scalar(
-            cal_pulse_error,
-            bounds=(0.1, 10.0),
-            method='bounded',
-            args=(para, para_h_ori, para_rc_ori, para_cc_ori, duration))
-
-        if not opt_result.success:
-            print(f"Optimization failed for {para}")
-            return
-
-    optimal_fre = opt_result.x
-    print(f"Optimal frequency factor for {para} is {optimal_fre:.4f}")
-
-    # Use optimized frequency to generate final profile
-    para_h_scaled = para_h_ori * optimal_fre
-    para_rc_scaled = para_rc_ori(para[1]) * optimal_fre
-    para_cc_scaled = para_cc_ori(para[1]) * optimal_fre
-
-    T_profile_final = cal_T_profile(para[0], para[1], para_h_scaled, para_rc_scaled, para_cc_scaled, dt=0.0001, t_total=25)
+    T_profile_final = cal_T_profile(para[0],para[1],para_h_ori*para[2],para_rc_ori(para[1])*para[3],para_cc_ori(para[1])*para[3], dt=0.001, t_total=25)
     current_dir = os.getcwd()
-    name = "Th={}_Tc={}_hr={}_cr={}.csv".format(para[0],para[1],para[2],para[3])
+    name = 'Th={}_Tc={}_hr={}_cr={}.csv'.format(para[0],para[1],para[2],para[3])
     filename = os.path.join(current_dir,name)
     metrics = run_PHQ(T_profile_final,filename, para)
     return metrics
@@ -468,35 +497,16 @@ if __name__ == '__main__':
     para_rc_ori = lambda Tc: np.array([5.039e-9, 5274.4+(1.912*Tc/1.0657)])
     para_cc_ori = lambda Tc: np.array([-1.912, 1.912*Tc/1.0657])
 
-    base_values = [800,800,800,
-                   900,900,900,900,
-                   1000,1000,1000,1000,1000,
-                   1100,1100,1100,1100,1100,
-                   1200,1200,1200,1200,1200,
-                   1300,1300,1300,1300,1300,
-                   1400,1400,1400,1400,1400]
+    base_values = [1200]
     T_h_arr = np.array(base_values)
-    base_values = [500,600,700,
-                   500,600,700,800,
-                   500,600,700,800,900,
-                   500,600,700,800,900,
-                   500,600,700,800,900,
-                   500,600,700,800,900,
-                   500,600,700,800,900]
+    base_values = [700]
     T_c_arr = np.array(base_values)
-    # Create the base values
-    #base_values = np.arange(1000, 1401, 100)
-    # Repeat each value x times
-    #T_h_arr = np.repeat(base_values, 5)
-    #base_values = np.arange(400, 801, 100)
-    # Repeat the block x times
-    #T_c_arr = np.tile(base_values, 5)
     fre_factor_arr = (np.linspace(1, 2, 1))
     combinations = [(Th, Tc, fre, fre) for Th,Tc in zip(T_h_arr,T_c_arr) for fre in fre_factor_arr]
     print (combinations)
     with Pool(processes=8) as pool:
         results = pool.map(single_task, combinations)
-
+        
 print("Length of results:", len(results))
 for i, entry in enumerate(results[:5]):
     print(f"Entry {i}: {entry}")
@@ -506,7 +516,7 @@ print("Sample rows:\n", df.head())
 df.to_csv("pulse_metrics.csv", index=False)
 pivot = df.pivot_table(index='Th', columns='Tc', values='avg_NH3_between_mins')
 plt.figure(figsize=(10, 8))
-ax = sns.heatmap(pivot, cmap="YlGnBu", fmt=".4f", vmin = 0, vmax = 0.0009, cbar_kws={'label': 'mole fraction NH$_3$'})
+ax = sns.heatmap(pivot, cmap="YlGnBu", fmt=".4f", vmin = 0, vmax = 0.004, cbar_kws={'label': 'Average NH₃'})
 ax.tick_params(axis='both', direction='out')
 plt.gca().invert_yaxis()
 plt.xlabel("Min Temperature [K]")

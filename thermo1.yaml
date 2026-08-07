@@ -226,6 +226,7 @@ reactions:
   Ea1: 23.9466
   Ea2: 0.0013
   Ea3: -0.0000
+  
 - equation: NH(S1) + FE(S3) <=> N(S2) + H(S2) + FE(B)
   type: surface-cubic-Ea
   gas-order: 0
@@ -234,6 +235,7 @@ reactions:
   Ea1: 15.0640
   Ea2: 0.0016
   Ea3: -0.0000
+  
 - equation: N(S2) + N(S1) + FE(B) <=>  N2(S1) + FE(S1)
   type: surface-cubic-Ea
   gas-order: 0
@@ -278,7 +280,7 @@ reactions:
   Ea1: -27.7530
   Ea2: 0.0051
   Ea3: 0.0000
-#########################################
+
 - equation: H(S2) + FE(S3) <=>  H(S3) + FE(S3)
   type: surface-cubic-Ea
   gas-order: 0
@@ -287,6 +289,7 @@ reactions:
   Ea1: 0
   Ea2: 0
   Ea3: 0
+  
 - equation: H(S2) + FE(S3) <=>  H(S4) + FE(S3)
   type: surface-cubic-Ea
   gas-order: 0
@@ -295,6 +298,7 @@ reactions:
   Ea1: 0
   Ea2: 0
   Ea3: 0
+  
 - equation: N(S1) + FE(S1) <=>  N(S2) + FE(S1)
   type: surface-cubic-Ea
   gas-order: 0

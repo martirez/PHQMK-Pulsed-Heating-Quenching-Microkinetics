@@ -20,12 +20,18 @@ gibbs_rate.py (external reaction type subroutine: surface-cubic-Ea)
   
 **Execute:**  
 conda activate ct-env  
-#for isothermal stead state  
+#for isothermal steady state  
 python Fe-NH3_iso.py    
 #for pulsed heating and quenching mode  
 python Fe-NH3_phq.py  
-#for pulsed heating and quenching mode scaled rates  
-python Fe-NH3_phq_scaled.py   
+#for pulsed heating and quenching mode with scaled rates  
+python Fe-NH3_phq_scaled.py 
+#for sensitivity analysis of isothermal steady state  
+python Fe-NH3_iso_sens.py    
+#for sensitivity analysis of pulsed heating and quenching mode  
+python Fe-NH3_phq_sens.py  
+#for sensitivity analysis of pulsed heating and quenching mode with scaled rates  
+python Fe-NH3_phq_scaled_sens.py   
 
 **Specifications in Fe-NH3_\<type\>.py that should be edited as needed:**    
 replace Tmin (base_values, T_c_arr) and Tmax (base_values, T_h_arr) in K for PHQ    
@@ -36,7 +42,7 @@ replace simulation length (t_total) in s for all types
 replace cycle length to constrain Tmin (durations) in s for PHQ scaled rates  
   
 **Please cite this repository and the following publications:**  
-**(1)** S. Kurdziel and J. M. P. Martirez, "PHQMK-Pulsed-Heating-Quenching-Microkinetics", (2026) https://github.com/martirez/PHQMK-Pulsed-Heating-Quenching-Microkinetics  
+**(1)** S. Kurdziel, Z. Sun, and J. M. P. Martirez, "PHQMK-Pulsed-Heating-Quenching-Microkinetics", (2026) https://github.com/martirez/PHQMK-Pulsed-Heating-Quenching-Microkinetics  
 **(2)** S. Kurdziel, Z. Sun, Z. Chang, F. Liu, L. Hu, Y. Ju, E. A. Carter, and J. M. P. Martirez, "First-Principles Microkinetic Model for Ammonia Synthesis on Fe(110) under Non-Equilibrium Programmable Heating and Quenching Operation", ChemRxiv, 15003681 (2026)  
 **(3)** J. M. P. Martirez, S. Kurdziel, and E. A. Carter, "First-Principles Insights into the Thermocatalytic Cracking of Ammonia-Hydrogen Blends on Fe(110). 2. Kinetics," Journal of Physical Chemistry C, 129, 6697-6718 (2025)  
 **(4)** J. M. P. Martirez and E. A. Carter, First-Principles Insights into the Thermocatalytic Cracking of Ammonia-Hydrogen Blends on Fe(110). 1. Thermodynamics, Journal of Physical Chemistry C, 126, 19733 (2022)    
